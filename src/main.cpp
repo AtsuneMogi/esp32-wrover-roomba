@@ -1,6 +1,5 @@
 #include <AsyncUDP.h>
 #include <Arduino.h>
-#include <stdlib.h>
 #include <vector>
 #include <WiFi.h>
 
@@ -337,10 +336,6 @@ void loop() {
             break;
     }
     displaySpeed();
-
-    Serial.print(v);
-    Serial.print(buf[0]);
-    Serial.println("");
 
     delay(100);
 }
