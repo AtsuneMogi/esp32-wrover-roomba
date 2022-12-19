@@ -182,6 +182,7 @@ void setup() {
     delay(50);
     Serial1.write(132);
     delay(50);
+    send_data(oneUp);
 
     if (udp.listen(port)) {
         udp.onPacket([](AsyncUDPPacket packet) {
