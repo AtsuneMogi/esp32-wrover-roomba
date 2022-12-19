@@ -1,5 +1,5 @@
-#include <AsyncUDP.h>
 #include <Arduino.h>
+#include <AsyncUDP.h>
 #include <vector>
 #include <WiFi.h>
 
@@ -13,7 +13,6 @@
 #define sensorBL 32
 #define sensorBR 33
 
-
 std::vector<int> seg = {0, 21, 19, 18, 5, 4, 15, 2}; // dp, g, f, e, d, c, b, a
 std::vector<std::vector<int>> numbers = {
     {0, 0, 1, 1, 1, 1, 1, 1}, // 0
@@ -26,12 +25,12 @@ std::vector<std::vector<int>> numbers = {
     {0, 0, 0, 0, 0, 1, 1, 1}, // 7
     {0, 1, 1, 1, 1, 1, 1, 1}, // 8
     {0, 1, 1, 0, 1, 1, 1, 1}, // 9
-    {1, 0, 0, 0, 0, 0, 0, 0} // dp
+    {1, 0, 0, 0, 0, 0, 0, 0}  // dp
 };
 
-char buf[1]; // direction command
+char buf[1];        // direction command
 bool brush = false; // brush flag
-bool music; // music flag
+bool music;         // music flag
 
 int v = 100; // velocity
 // super mario
@@ -39,14 +38,13 @@ std::vector<int> oneUp = {140, 2, 6, 84, 5, 91, 5, 100, 5, 96, 5, 98, 5, 103, 5,
 
 char ssid[] = "M5StickC-Plus-Controller";
 char pass[] = "controller";
-AsyncUDP udp; // udp instance
-unsigned int port = 8888;  // local port to listen on
-
+AsyncUDP udp;             // udp instance
+unsigned int port = 8888; // local port to listen on
 
 void displayNumber(int n) {
-    for (int i = 0; i < 8; i++) digitalWrite(seg[i], numbers[n][i]);
+    for (int i = 0; i < 8; i++)
+        digitalWrite(seg[i], numbers[n][i]);
 }
-
 
 void displaySpeed() {
     if (v == 0) displayNumber(0);
@@ -59,64 +57,55 @@ void displaySpeed() {
 
 // devide integer to 8 bits
 unsigned int hex_convert_to16(int a, int b) {
-    return (unsigned int)(a << 8)|(int)(b);
+    return (unsigned int)(a << 8) | (int)(b);
 }
-
 
 unsigned int hex_convert_to8_high(int a) {
     return (unsigned int)(a >> 8) & 0x00FF;
 }
 
-
 unsigned int hex_convert_to8_low(int a) {
-    return a^(hex_convert_to8_high(a) << 8);
+    return a ^ (hex_convert_to8_high(a) << 8);
 }
 
-
-void roomba_send_num(int num) { // devide into two 8-bit commands 
+void roomba_send_num(int num) { // devide into two 8-bit commands
     Serial1.write(hex_convert_to8_high(num));
     Serial1.write(hex_convert_to8_low(num));
 }
 
-
 void roomba_drive(int left, int right) { // go advance
     Serial1.write(byte(145));
-    roomba_send_num(right);  // velocity right 
-    roomba_send_num(left);  // velocity left 
+    roomba_send_num(right); // velocity right
+    roomba_send_num(left);  // velocity left
     delay(100);
 }
 
-
 void stop() {
     Serial1.write(137);
-    roomba_send_num(0);  // velocity 0mm/s
-    roomba_send_num(0);  // radius
+    roomba_send_num(0); // velocity 0mm/s
+    roomba_send_num(0); // radius
     delay(100);
 };
-
 
 void roomba_drive_turn_counterclockwise(int num) {
     Serial1.write(137);
-    roomba_send_num(num);  // velocity 100mm/s
-    roomba_send_num(1);  // radius
+    roomba_send_num(num); // velocity 100mm/s
+    roomba_send_num(1);   // radius
     delay(100);
 };
-
 
 void roomba_drive_turn_clockwise(int num) {
     Serial1.write(137);
-    roomba_send_num(num);  // velocity 
-    roomba_send_num(-1);  // radius 
+    roomba_send_num(num); // velocity
+    roomba_send_num(-1);  // radius
     delay(100);
 };
 
-
-void send_data(std::vector<int>& arr) {
+void send_data(std::vector<int> &arr) {
     for (int i = 0; i < arr.size(); i++) {
         Serial1.write(arr[i]);
     }
 }
-
 
 void yobikomi() {
     std::vector<std::vector<int>> arr2 = {
@@ -130,15 +119,13 @@ void yobikomi() {
         {140, 1, 4, 81, 28, 79, 28, 78, 28, 76, 28, 141, 1},
         {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 81, 28, 141, 1},
         {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 76, 28, 141, 1},
-        {140, 1, 1, 74, 60, 141, 1}
-    };
+        {140, 1, 1, 74, 60, 141, 1}};
     for (int i = 0; i < arr2.size(); i++) {
         std::vector<int> arr1 = arr2[i];
         send_data(arr1);
         delay(1800);
     }
 }
-
 
 void roomba_end() {
     Serial1.write(128);
@@ -147,7 +134,6 @@ void roomba_end() {
     Serial1.write(173);
     Serial1.end();
 }
-
 
 void setup() {
     pinMode(btnUp, INPUT_PULLUP);
@@ -176,7 +162,7 @@ void setup() {
         }
     }
     Serial.println("");
-    
+
     Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, tx: 1, rx: 3
     Serial1.write(128);
     delay(50);
@@ -185,12 +171,10 @@ void setup() {
     send_data(oneUp);
 
     if (udp.listen(port)) {
-        udp.onPacket([](AsyncUDPPacket packet) {
-            buf[0]= (char)*(packet.data());
-        });
+        udp.onPacket([](AsyncUDPPacket packet)
+                     { buf[0] = (char)*(packet.data()); });
     }
 }
-
 
 void loop() {
     if (!digitalRead(btnDown) && 0 < v) { // min: 0
@@ -216,127 +200,144 @@ void loop() {
     }
 
     switch (buf[0]) {
-        case 'a':
-            if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
-                Serial.print("front");
-                stop();
-            } else {
-                roomba_drive(v, v); //go advance
-            }
-            break;
-        case 'A':
-            if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
-                stop();
-            } else {
-                roomba_drive(2*v, 2*v); //go advance
-            }
-            break;
-        case 'b':
-            if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
-                stop();
-            } else {
-                roomba_drive(-v, -v);
-            }
-            break;
-        case 'B':
-            if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
-                stop();
-            } else {
-                roomba_drive(-2*v, -2*v);
-            }
-            break;
-        case 'c':
-            if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
-                stop();
-            } else {
-                roomba_drive(v/5, v);
-            }
-            break;
-        case 'C':
-            if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
-                stop();
-            } else {
-                roomba_drive(2*v/5, 2*v);
-            }
-            break;
-        case 'd':
-            if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
-                stop();
-            } else {
-                roomba_drive(v, v/5);
-            }
-            break;
-        case 'D':
-            if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
-                stop();
-            } else {
-                roomba_drive(2*v, 2*v/5);
-            }
-            break;
-        case 'e':
-            if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
-                stop();
-            } else {
-                roomba_drive(-v/5, -v);
-            }
-            break;
-        case 'E':
-            if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
-                stop();
-            } else {
-                roomba_drive(-2*v/5, -2*v);
-            }
-            break;
-        case 'f':
-            if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
-                stop();
-            } else {
-                roomba_drive(-v, -v/5);
-            }
-            break;
-        case 'F':
-            if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
-                stop();
-            } else {
-                roomba_drive(-2*v, -2*v/5);
-            }
-            break;
-        case 'g':
-            roomba_drive_turn_counterclockwise(v); // turn counterclockwise
-            break;
-        case 'G':
-            roomba_drive_turn_counterclockwise(2*v); // turn counterclockwise
-            break;
-        case 'h':
-            roomba_drive_turn_clockwise(v); // turn clockwise
-            break;
-        case 'H':
-            roomba_drive_turn_clockwise(2*v); // turn clockwise
-            break;
-        case 'I':
-            send_data(oneUp);
-            break;
-        case 'J':
-            if (!brush) {
-                Serial1.write(138);
-                Serial1.write(7);
-                brush = true;
-                delay(500);
-            } else if (brush) {
-                Serial1.write(138);
-                Serial1.write(0);
-                brush = false;
-                delay(500);
-            }
-            break;
-        case 'K':
+    case 'a':
+        if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
+            Serial.print("front");
             stop();
-            break;
-        default:
+        } else {
+            roomba_drive(v, v); // go advance
+        }
+        break;
+    case 'A':
+        if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
             stop();
-            break;
+        } else {
+            roomba_drive(2 * v, 2 * v); // go advance
+        }
+        break;
+    case 'b':
+        if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
+            stop();
+        } else {
+            roomba_drive(-v, -v);
+        }
+        break;
+    case 'B':
+        if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
+            stop();
+        } else {
+            roomba_drive(-2 * v, -2 * v);
+        }
+        break;
+    case 'c':
+        if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
+            stop();
+        } else {
+            roomba_drive(v / 5, v);
+        }
+        break;
+    case 'C':
+        if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
+            stop();
+        } else {
+            roomba_drive(2 * v / 5, 2 * v);
+        }
+        break;
+    case 'd':
+        if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
+            stop();
+        } else {
+            roomba_drive(v, v / 5);
+        }
+        break;
+    case 'D':
+        if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
+            stop();
+        } else {
+            roomba_drive(2 * v, 2 * v / 5);
+        }
+        break;
+    case 'e':
+        if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
+            stop();
+        } else {
+            roomba_drive(-v / 5, -v);
+        }
+        break;
+    case 'E':
+        if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
+            stop();
+        } else {
+            roomba_drive(-2 * v / 5, -2 * v);
+        }
+        break;
+    case 'f':
+        if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
+            stop();
+        } else {
+            roomba_drive(-v, -v / 5);
+        }
+        break;
+    case 'F':
+        if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
+            stop();
+        } else {
+            roomba_drive(-2 * v, -2 * v / 5);
+        }
+        break;
+    case 'g':
+        roomba_drive_turn_counterclockwise(v); // turn counterclockwise
+        break;
+    case 'G':
+        roomba_drive_turn_counterclockwise(2 * v); // turn counterclockwise
+        break;
+    case 'h':
+        roomba_drive_turn_clockwise(v); // turn clockwise
+        break;
+    case 'H':
+        roomba_drive_turn_clockwise(2 * v); // turn clockwise
+        break;
+    case 'I':
+        send_data(oneUp);
+        break;
+    case 'J':
+        if (!brush) {
+            Serial1.write(138);
+            Serial1.write(7);
+            brush = true;
+            delay(500);
+        } else if (brush) {
+            Serial1.write(138);
+            Serial1.write(0);
+            brush = false;
+            delay(500);
+        }
+        break;
+    case 'K':
+        stop();
+        break;
+    default:
+        stop();
+        break;
     }
     displaySpeed();
+
+    if (WiFi.status() != WL_CONNECTED) {
+        roomba_end();
+        while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+            Serial.print(".");
+            for (int i = 0; i < 11; i++) {
+                displayNumber(i);
+                delay(100);
+            }
+        }
+        Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, tx: 1, rx: 3
+        Serial1.write(128);
+        delay(50);
+        Serial1.write(132);
+        delay(50);
+        send_data(oneUp);
+    }
 
     delay(100);
 }
