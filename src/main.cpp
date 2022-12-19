@@ -32,7 +32,7 @@ char buf[1];        // direction command
 bool brush = false; // brush flag
 bool music;         // music flag
 
-int v = 100; // velocity
+int v = 150; // velocity
 // super mario
 std::vector<int> oneUp = {140, 2, 6, 84, 5, 91, 5, 100, 5, 96, 5, 98, 5, 103, 5, 141, 2};
 
@@ -127,9 +127,19 @@ void yobikomi() {
     }
 }
 
+
+void roomba_setup() {
+    Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, tx: 1, rx: 3
+    Serial1.write(128);
+    delay(50);
+    Serial1.write(132);
+    delay(50);
+    send_data(oneUp);
+}
+
 void roomba_end() {
     Serial1.write(128);
-    Serial1.write(133);
+    Serial1.write(132);
     Serial1.write(128);
     Serial1.write(173);
     Serial1.end();
@@ -163,16 +173,11 @@ void setup() {
     }
     Serial.println("");
 
-    Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, tx: 1, rx: 3
-    Serial1.write(128);
-    delay(50);
-    Serial1.write(132);
-    delay(50);
-    send_data(oneUp);
+    roomba_setup();
 
     if (udp.listen(port)) {
-        udp.onPacket([](AsyncUDPPacket packet)
-                     { buf[0] = (char)*(packet.data()); });
+        udp.onPacket([](AsyncUDPPacket packet) {
+            buf[0] = (char)*(packet.data()); });
     }
 }
 
@@ -331,12 +336,8 @@ void loop() {
                 delay(100);
             }
         }
-        Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, tx: 1, rx: 3
-        Serial1.write(128);
-        delay(50);
-        Serial1.write(132);
-        delay(50);
-        send_data(oneUp);
+        roomba_setup();
+        v = 150;
     }
 
     delay(100);
