@@ -13,6 +13,7 @@
 #define sensorBL 32
 #define sensorBR 33
 
+
 std::vector<int> seg = {0, 21, 19, 18, 5, 4, 15, 2}; // dp, g, f, e, d, c, b, a
 std::vector<std::vector<int>> numbers = {
     {0, 0, 1, 1, 1, 1, 1, 1}, // 0
@@ -36,15 +37,17 @@ int v = 150; // velocity
 // super mario
 std::vector<int> oneUp = {140, 2, 6, 84, 5, 91, 5, 100, 5, 96, 5, 98, 5, 103, 5, 141, 2};
 
-char ssid[] = "M5StickC-Plus-Controller";
+char ssid[] = "M5StickC-Controller";
 char pass[] = "controller";
-AsyncUDP udp;             // udp instance
+AsyncUDP udp; // udp instance
 unsigned int port = 8888; // local port to listen on
+
 
 void displayNumber(int n) {
     for (int i = 0; i < 8; i++)
         digitalWrite(seg[i], numbers[n][i]);
 }
+
 
 void displaySpeed() {
     if (v == 0) displayNumber(0);
@@ -60,18 +63,22 @@ unsigned int hex_convert_to16(int a, int b) {
     return (unsigned int)(a << 8) | (int)(b);
 }
 
+
 unsigned int hex_convert_to8_high(int a) {
     return (unsigned int)(a >> 8) & 0x00FF;
 }
+
 
 unsigned int hex_convert_to8_low(int a) {
     return a ^ (hex_convert_to8_high(a) << 8);
 }
 
+
 void roomba_send_num(int num) { // devide into two 8-bit commands
     Serial1.write(hex_convert_to8_high(num));
     Serial1.write(hex_convert_to8_low(num));
 }
+
 
 void roomba_drive(int left, int right) { // go advance
     Serial1.write(byte(145));
@@ -80,32 +87,37 @@ void roomba_drive(int left, int right) { // go advance
     delay(100);
 }
 
+
 void stop() {
     Serial1.write(137);
     roomba_send_num(0); // velocity 0mm/s
     roomba_send_num(0); // radius
     delay(100);
-};
+}
+
 
 void roomba_drive_turn_counterclockwise(int num) {
     Serial1.write(137);
     roomba_send_num(num); // velocity 100mm/s
     roomba_send_num(1);   // radius
     delay(100);
-};
+}
+
 
 void roomba_drive_turn_clockwise(int num) {
     Serial1.write(137);
     roomba_send_num(num); // velocity
     roomba_send_num(-1);  // radius
     delay(100);
-};
+}
+
 
 void send_data(std::vector<int> &arr) {
     for (int i = 0; i < arr.size(); i++) {
         Serial1.write(arr[i]);
     }
 }
+
 
 void yobikomi() {
     std::vector<std::vector<int>> arr2 = {
@@ -137,6 +149,7 @@ void roomba_setup() {
     send_data(oneUp);
 }
 
+
 void roomba_end() {
     Serial1.write(128);
     Serial1.write(132);
@@ -144,6 +157,7 @@ void roomba_end() {
     Serial1.write(173);
     Serial1.end();
 }
+
 
 void setup() {
     pinMode(btnUp, INPUT_PULLUP);
@@ -180,6 +194,7 @@ void setup() {
             buf[0] = (char)*(packet.data()); });
     }
 }
+
 
 void loop() {
     if (!digitalRead(btnDown) && 0 < v) { // min: 0
@@ -342,3 +357,4 @@ void loop() {
 
     delay(100);
 }
+
