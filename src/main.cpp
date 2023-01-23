@@ -34,7 +34,7 @@ bool brush = false; // brush flag
 bool music;         // music flag
 
 int v = 150; // velocity
-// super mario
+// super mario one up
 std::vector<int> oneUp = {140, 2, 6, 84, 5, 91, 5, 100, 5, 96, 5, 98, 5, 103, 5, 141, 2};
 
 char ssid[] = "M5StickC-Controller";
@@ -191,7 +191,8 @@ void setup() {
 
     if (udp.listen(port)) {
         udp.onPacket([](AsyncUDPPacket packet) {
-            buf[0] = (char)*(packet.data()); });
+            buf[0] = (char)*(packet.data());
+        });
     }
 }
 
@@ -354,7 +355,5 @@ void loop() {
         roomba_setup();
         v = 150;
     }
-
     delay(100);
 }
-
