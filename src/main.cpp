@@ -220,125 +220,125 @@ void loop() {
     }
 
     switch (buf[0]) {
-    case 'a':
-        if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
-            Serial.print("front");
+        case 'a':
+            if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
+                Serial.print("front");
+                stop();
+            } else {
+                roomba_drive(v, v); // go advance
+            }
+            break;
+        case 'A':
+            if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
+                stop();
+            } else {
+                roomba_drive(2 * v, 2 * v); // go advance
+            }
+            break;
+        case 'b':
+            if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
+                stop();
+            } else {
+                roomba_drive(-v, -v);
+            }
+            break;
+        case 'B':
+            if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
+                stop();
+            } else {
+                roomba_drive(-2 * v, -2 * v);
+            }
+            break;
+        case 'c':
+            if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
+                stop();
+            } else {
+                roomba_drive(v / 5, v);
+            }
+            break;
+        case 'C':
+            if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
+                stop();
+            } else {
+                roomba_drive(2 * v / 5, 2 * v);
+            }
+            break;
+        case 'd':
+            if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
+                stop();
+            } else {
+                roomba_drive(v, v / 5);
+            }
+            break;
+        case 'D':
+            if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
+                stop();
+            } else {
+                roomba_drive(2 * v, 2 * v / 5);
+            }
+            break;
+        case 'e':
+            if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
+                stop();
+            } else {
+                roomba_drive(-v / 5, -v);
+            }
+            break;
+        case 'E':
+            if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
+                stop();
+            } else {
+                roomba_drive(-2 * v / 5, -2 * v);
+            }
+            break;
+        case 'f':
+            if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
+                stop();
+            } else {
+                roomba_drive(-v, -v / 5);
+            }
+            break;
+        case 'F':
+            if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
+                stop();
+            } else {
+                roomba_drive(-2 * v, -2 * v / 5);
+            }
+            break;
+        case 'g':
+            roomba_drive_turn_counterclockwise(v); // turn counterclockwise
+            break;
+        case 'G':
+            roomba_drive_turn_counterclockwise(2 * v); // turn counterclockwise
+            break;
+        case 'h':
+            roomba_drive_turn_clockwise(v); // turn clockwise
+            break;
+        case 'H':
+            roomba_drive_turn_clockwise(2 * v); // turn clockwise
+            break;
+        case 'I':
+            send_data(oneUp);
+            break;
+        case 'J':
+            if (!brush) {
+                Serial1.write(138);
+                Serial1.write(7);
+                brush = true;
+                delay(500);
+            } else if (brush) {
+                Serial1.write(138);
+                Serial1.write(0);
+                brush = false;
+                delay(500);
+            }
+            break;
+        case 'K':
             stop();
-        } else {
-            roomba_drive(v, v); // go advance
-        }
-        break;
-    case 'A':
-        if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
+            break;
+        default:
             stop();
-        } else {
-            roomba_drive(2 * v, 2 * v); // go advance
-        }
-        break;
-    case 'b':
-        if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
-            stop();
-        } else {
-            roomba_drive(-v, -v);
-        }
-        break;
-    case 'B':
-        if (!digitalRead(sensorB) + !digitalRead(sensorBL) + !digitalRead(sensorBR)) {
-            stop();
-        } else {
-            roomba_drive(-2 * v, -2 * v);
-        }
-        break;
-    case 'c':
-        if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
-            stop();
-        } else {
-            roomba_drive(v / 5, v);
-        }
-        break;
-    case 'C':
-        if (!digitalRead(sensorF) + !digitalRead(sensorFL)) {
-            stop();
-        } else {
-            roomba_drive(2 * v / 5, 2 * v);
-        }
-        break;
-    case 'd':
-        if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
-            stop();
-        } else {
-            roomba_drive(v, v / 5);
-        }
-        break;
-    case 'D':
-        if (!digitalRead(sensorF) + !digitalRead(sensorFR)) {
-            stop();
-        } else {
-            roomba_drive(2 * v, 2 * v / 5);
-        }
-        break;
-    case 'e':
-        if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
-            stop();
-        } else {
-            roomba_drive(-v / 5, -v);
-        }
-        break;
-    case 'E':
-        if (!digitalRead(sensorB) + !digitalRead(sensorBL)) {
-            stop();
-        } else {
-            roomba_drive(-2 * v / 5, -2 * v);
-        }
-        break;
-    case 'f':
-        if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
-            stop();
-        } else {
-            roomba_drive(-v, -v / 5);
-        }
-        break;
-    case 'F':
-        if (!digitalRead(sensorB) + !digitalRead(sensorBR)) {
-            stop();
-        } else {
-            roomba_drive(-2 * v, -2 * v / 5);
-        }
-        break;
-    case 'g':
-        roomba_drive_turn_counterclockwise(v); // turn counterclockwise
-        break;
-    case 'G':
-        roomba_drive_turn_counterclockwise(2 * v); // turn counterclockwise
-        break;
-    case 'h':
-        roomba_drive_turn_clockwise(v); // turn clockwise
-        break;
-    case 'H':
-        roomba_drive_turn_clockwise(2 * v); // turn clockwise
-        break;
-    case 'I':
-        send_data(oneUp);
-        break;
-    case 'J':
-        if (!brush) {
-            Serial1.write(138);
-            Serial1.write(7);
-            brush = true;
-            delay(500);
-        } else if (brush) {
-            Serial1.write(138);
-            Serial1.write(0);
-            brush = false;
-            delay(500);
-        }
-        break;
-    case 'K':
-        stop();
-        break;
-    default:
-        stop();
-        break;
+            break;
     }
     displaySpeed();
 
