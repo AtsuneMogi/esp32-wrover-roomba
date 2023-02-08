@@ -223,7 +223,7 @@ void readBuf() {
         case 'H':
             roomba_drive_turn_clockwise(2 * v); // turn clockwise
             break;
-        case 'J':
+        case 'I':
             if (!brush) {
                 Serial1.write(138);
                 Serial1.write(7);
@@ -352,7 +352,7 @@ void loop() {
     displaySpeed();
 
     readBuf();
-    if (buf[0] == 'I') {
+    if (buf[0] == 'J') {
         std::thread t1(yobikomi1);
         std::thread t2(yobikomi2);
         t1.join();
