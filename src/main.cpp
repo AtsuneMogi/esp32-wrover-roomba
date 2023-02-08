@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <AsyncUDP.h>
+#include <thread>
 #include <vector>
 #include <WiFi.h>
 
@@ -12,7 +13,6 @@
 #define sensorFR 26
 #define sensorBL 32
 #define sensorBR 33
-
 
 std::vector<int> seg = {0, 21, 19, 18, 5, 4, 15, 2}; // dp, g, f, e, d, c, b, a
 std::vector<std::vector<int>> numbers = {
@@ -31,7 +31,6 @@ std::vector<std::vector<int>> numbers = {
 
 char buf[1];        // direction command
 bool brush = false; // brush flag
-bool music;         // music flag
 
 int v = 150; // velocity
 // super mario one up
@@ -39,7 +38,7 @@ std::vector<int> oneUp = {140, 2, 6, 84, 5, 91, 5, 100, 5, 96, 5, 98, 5, 103, 5,
 
 char ssid[] = "M5StickC-Controller";
 char pass[] = "controller";
-AsyncUDP udp; // udp instance
+AsyncUDP udp;             // udp instance
 unsigned int port = 8888; // local port to listen on
 
 
@@ -50,12 +49,18 @@ void displayNumber(int n) {
 
 
 void displaySpeed() {
-    if (v == 0) displayNumber(0);
-    else if (v == 50) displayNumber(1);
-    else if (v == 100) displayNumber(2);
-    else if (v == 150) displayNumber(3);
-    else if (v == 200) displayNumber(4);
-    else displayNumber(5);
+    if (v == 0)
+        displayNumber(0);
+    else if (v == 50)
+        displayNumber(1);
+    else if (v == 100)
+        displayNumber(2);
+    else if (v == 150)
+        displayNumber(3);
+    else if (v == 200)
+        displayNumber(4);
+    else
+        displayNumber(5);
 }
 
 // devide integer to 8 bits
@@ -119,107 +124,7 @@ void send_data(std::vector<int> &arr) {
 }
 
 
-void yobikomi() {
-    std::vector<std::vector<int>> arr2 = {
-        {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 81, 28, 141, 1},
-        {141, 1},
-        {140, 1, 6, 74, 14, 74, 14, 74, 14, 76, 14, 78, 42, 74, 14, 141, 1},
-        {140, 1, 3, 78, 42, 81, 14, 81, 56, 141, 1},
-        {140, 1, 5, 74, 14, 74, 14, 74, 14, 76, 14, 78, 56, 141, 1},
-        {141, 1},
-        {140, 1, 6, 76, 14, 76, 14, 76, 14, 74, 14, 76, 28, 78, 28, 141, 1},
-        {140, 1, 4, 81, 28, 79, 28, 78, 28, 76, 28, 141, 1},
-        {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 81, 28, 141, 1},
-        {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 76, 28, 141, 1},
-        {140, 1, 1, 74, 60, 141, 1}};
-    for (int i = 0; i < arr2.size(); i++) {
-        std::vector<int> arr1 = arr2[i];
-        send_data(arr1);
-        delay(1800);
-    }
-}
-
-
-void roomba_setup() {
-    Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, tx: 1, rx: 3
-    Serial1.write(128);
-    delay(50);
-    Serial1.write(132);
-    delay(50);
-    send_data(oneUp);
-}
-
-
-void roomba_end() {
-    Serial1.write(128);
-    Serial1.write(132);
-    Serial1.write(128);
-    Serial1.write(173);
-    Serial1.end();
-}
-
-
-void setup() {
-    pinMode(btnUp, INPUT_PULLUP);
-    pinMode(btnDown, INPUT_PULLUP);
-    pinMode(sensorF, INPUT);
-    pinMode(sensorB, INPUT);
-    pinMode(sensorFL, INPUT);
-    pinMode(sensorFR, INPUT);
-    pinMode(sensorBL, INPUT);
-    pinMode(sensorBR, INPUT);
-    for (int i = 0; i < 8; i++) pinMode(seg[i], OUTPUT);
-
-    Serial.begin(115200);
-
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, pass);
-    delay(100);
-
-    Serial.print("Connecting...");
-
-    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        Serial.print(".");
-        for (int i = 0; i < 11; i++) {
-            displayNumber(i);
-            delay(100);
-        }
-    }
-    Serial.println("");
-
-    roomba_setup();
-
-    if (udp.listen(port)) {
-        udp.onPacket([](AsyncUDPPacket packet) {
-            buf[0] = (char)*(packet.data());
-        });
-    }
-}
-
-
-void loop() {
-    if (!digitalRead(btnDown) && 0 < v) { // min: 0
-        if (!digitalRead(btnUp)) {
-            roomba_end();
-        }
-        stop();
-        v -= 50;
-        music = false;
-        delay(1000);
-    } else if (!digitalRead(btnUp) && v < 250) { // max: 250
-        if (!digitalRead(btnDown)) {
-            roomba_end();
-        }
-        stop();
-        v += 50;
-        music = false;
-        delay(1000);
-    } else if (v == 0 && music == false) {
-        delay(100);
-        yobikomi();
-        music = true;
-    }
-
+void readBuf() {
     switch (buf[0]) {
         case 'a':
             if (!digitalRead(sensorF) + !digitalRead(sensorFL) + !digitalRead(sensorFR)) {
@@ -318,9 +223,6 @@ void loop() {
         case 'H':
             roomba_drive_turn_clockwise(2 * v); // turn clockwise
             break;
-        case 'I':
-            send_data(oneUp);
-            break;
         case 'J':
             if (!brush) {
                 Serial1.write(138);
@@ -341,7 +243,121 @@ void loop() {
             stop();
             break;
     }
+}
+
+
+void yobikomi1() {
+    std::vector<std::vector<int>> arr2 = {
+        {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 81, 28, 141, 1},
+        {141, 1},
+        {140, 1, 6, 74, 14, 74, 14, 74, 14, 76, 14, 78, 42, 74, 14, 141, 1},
+        {140, 1, 3, 78, 42, 81, 14, 81, 56, 141, 1},
+        {140, 1, 5, 74, 14, 74, 14, 74, 14, 76, 14, 78, 56, 141, 1},
+        {141, 1},
+        {140, 1, 6, 76, 14, 76, 14, 76, 14, 74, 14, 76, 28, 78, 28, 141, 1},
+        {140, 1, 4, 81, 28, 79, 28, 78, 28, 76, 28, 141, 1},
+        {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 81, 28, 141, 1},
+        {140, 1, 6, 81, 14, 81, 28, 83, 14, 81, 14, 78, 14, 76, 28, 141, 1},
+        {140, 1, 1, 74, 60, 141, 1}
+    };
+    for (int i = 0; i < arr2.size(); i++) {
+        std::vector<int> arr1 = arr2[i];
+        send_data(arr1);
+        delay(1800);
+    }
+}
+
+
+void yobikomi2() {
+    for (int i = 0; i < 100; i++) {
+        readBuf();
+        delay(100);
+    }
+}
+
+
+void roomba_setup() {
+    Serial1.begin(115200, SERIAL_8N1, 3, 1); // roomba, rx: 3, tx: 1
+    Serial1.write(128);
+    delay(50);
+    Serial1.write(132);
+    delay(50);
+    send_data(oneUp);
+}
+
+
+void roomba_end() {
+    Serial1.write(128);
+    Serial1.write(132);
+    Serial1.write(128);
+    Serial1.write(173);
+    Serial1.end();
+}
+
+
+void setup() {
+    pinMode(btnUp, INPUT_PULLUP);
+    pinMode(btnDown, INPUT_PULLUP);
+    pinMode(sensorF, INPUT);
+    pinMode(sensorB, INPUT);
+    pinMode(sensorFL, INPUT);
+    pinMode(sensorFR, INPUT);
+    pinMode(sensorBL, INPUT);
+    pinMode(sensorBR, INPUT);
+    for (int i = 0; i < 8; i++) pinMode(seg[i], OUTPUT);
+
+    Serial.begin(115200);
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, pass);
+    delay(100);
+
+    Serial.print("Connecting...");
+
+    while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+        Serial.print(".");
+        for (int i = 0; i < 11; i++) {
+            displayNumber(i);
+            delay(100);
+        }
+    }
+    Serial.println("");
+
+    roomba_setup();
+
+    if (udp.listen(port)) {
+        udp.onPacket([](AsyncUDPPacket packet) {
+            buf[0] = (char)*(packet.data());
+        });
+    }
+}
+
+
+void loop() {
+    if (!digitalRead(btnDown) && 0 < v) { // min: 0
+        if (!digitalRead(btnUp)) {
+            roomba_end();
+        }
+        stop();
+        v -= 50;
+        delay(1000);
+    } else if (!digitalRead(btnUp) && v < 250) { // max: 250
+        if (!digitalRead(btnDown)) {
+            roomba_end();
+        }
+        stop();
+        v += 50;
+        delay(1000);
+    }
     displaySpeed();
+
+    readBuf();
+    if (buf[0] == 'I') {
+        std::thread t1(yobikomi1);
+        std::thread t2(yobikomi2);
+        t1.join();
+        t2.join();
+    }
 
     if (WiFi.status() != WL_CONNECTED) {
         roomba_end();
@@ -357,3 +373,4 @@ void loop() {
     }
     delay(100);
 }
+
